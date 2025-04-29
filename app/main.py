@@ -17,7 +17,7 @@ ROOT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))  # remonte à la rac
 # === CHEMINS DES FICHIERS ===
 model_path = os.path.join(ROOT_DIR, "model", "XGBoost_auc_0.748_cout_33136_trial_9.joblib")
 seuil_path = os.path.join(ROOT_DIR, "data_sample", "seuil_optimal.txt")
-x_train_path = os.path.join(ROOT_DIR, "data_sample", "X_test_sample.csv")
+x_train_path = os.path.join(ROOT_DIR, "data_sample", "X_test_sample_id.csv")
 
 # === LANCEMENT DE L’API ===
 app = FastAPI(title="Credit Scoring API")
