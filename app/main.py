@@ -23,8 +23,10 @@ with open(seuil_path, "r") as f:
     seuil_metier = float(f.read())
 
 df_train = pd.read_csv(x_train_path)
-columns = df_train.columns.tolist()
-sample = df_train.iloc[0].to_dict()  # Exemple Swagger
+
+# Exclure SK_ID_CURR des features utilisées pour l'entraînement
+columns = [col for col in df_train.columns if col != "SK_ID_CURR"]
+sample = df_train[columns].iloc[0].to_dict()  # Exemple Swagger sans SK_ID_CURR
 
 # === SCHÉMA D’ENTRÉE ===
 class ClientData(BaseModel):
@@ -40,8 +42,10 @@ class ClientData(BaseModel):
 def predict(data: ClientData):
     try:
         df = pd.DataFrame([data.dict()])
+
+        # Par sécurité, même si SK_ID_CURR n'est plus attendu ici
         if "SK_ID_CURR" in df.columns:
-            df = df.drop(columns=["SK_ID_CURR"])  # On ne passe pas l'ID au modèle
+            df = df.drop(columns=["SK_ID_CURR"])
 
         proba = model.predict_proba(df)[0][1]
         prediction = int(proba >= seuil_metier)
@@ -61,9 +65,6 @@ def predict(data: ClientData):
 @app.get("/predict_demo")
 def predict_demo():
     df = pd.DataFrame([sample])
-    if "SK_ID_CURR" in df.columns:
-        df = df.drop(columns=["SK_ID_CURR"])
-
     proba = model.predict_proba(df)[0][1]
     prediction = int(proba >= seuil_metier)
     decision = "Refusé" if prediction == 1 else "Accepté"
