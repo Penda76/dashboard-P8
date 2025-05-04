@@ -9,7 +9,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))  # remonte à la racine du dépôt
 
 # === CHEMINS DES FICHIERS ===
-model_path = os.path.join(ROOT_DIR, "model", "XGBoost_auc_0.740_cout_34090_trial_1.joblib")
+model_path = os.path.join(ROOT_DIR, "model", "XGBoost_auc_0.741_cout_33940_trial_1.joblib")
 seuil_path = os.path.join(ROOT_DIR, "data_sample", "seuil_optimal.txt")
 x_train_path = os.path.join(ROOT_DIR, "data_sample", "X_test_clean.csv")
 
