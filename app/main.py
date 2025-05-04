@@ -4,14 +4,10 @@ import joblib
 import pandas as pd
 import os
 
-# === RÉPERTOIRE DE TRAVAIL ===
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))  # remonte à la racine du dépôt
-
 # === CHEMINS DES FICHIERS ===
-model_path = os.path.join(ROOT_DIR, "model", "XGBoost_auc_0.741_cout_33940_trial_1.joblib")
-seuil_path = os.path.join(ROOT_DIR, "data_sample", "seuil_optimal.txt")
-x_train_path = os.path.join(ROOT_DIR, "data_sample", "X_test_clean.csv")
+model_path = os.path.join("model", "XGBoost_auc_0.741_cout_33940_trial_1.joblib")
+seuil_path = os.path.join("data_sample", "seuil_optimal.txt")
+x_test_path = os.path.join("data_sample", "X_test_clean.csv")
 
 # === LANCEMENT DE L’API ===
 app = FastAPI(title="Credit Scoring API")
@@ -22,11 +18,9 @@ model = joblib.load(model_path)
 with open(seuil_path, "r") as f:
     seuil_metier = float(f.read())
 
-df_train = pd.read_csv(x_train_path)
-
-# Exclure SK_ID_CURR des features utilisées pour l'entraînement
-columns = [col for col in df_train.columns if col != "SK_ID_CURR"]
-sample = df_train[columns].iloc[0].to_dict()  # Exemple Swagger sans SK_ID_CURR
+df_test = pd.read_csv(x_test_path)
+columns = df_test.columns.tolist()
+sample = df_test.iloc[0].to_dict()  # Exemple Swagger
 
 # === SCHÉMA D’ENTRÉE ===
 class ClientData(BaseModel):
@@ -42,10 +36,8 @@ class ClientData(BaseModel):
 def predict(data: ClientData):
     try:
         df = pd.DataFrame([data.dict()])
-
-        # Par sécurité, même si SK_ID_CURR n'est plus attendu ici
         if "SK_ID_CURR" in df.columns:
-            df = df.drop(columns=["SK_ID_CURR"])
+            df = df.drop(columns=["SK_ID_CURR"])  # On ne passe pas l'ID au modèle
 
         proba = model.predict_proba(df)[0][1]
         prediction = int(proba >= seuil_metier)
@@ -65,6 +57,9 @@ def predict(data: ClientData):
 @app.get("/predict_demo")
 def predict_demo():
     df = pd.DataFrame([sample])
+    if "SK_ID_CURR" in df.columns:
+        df = df.drop(columns=["SK_ID_CURR"])
+
     proba = model.predict_proba(df)[0][1]
     prediction = int(proba >= seuil_metier)
     decision = "Refusé" if prediction == 1 else "Accepté"
@@ -89,10 +84,10 @@ def health_check():
 @app.get("/predict/{client_id}")
 def predict_by_id(client_id: int):
     try:
-        if "SK_ID_CURR" not in df_train.columns:
+        if "SK_ID_CURR" not in df_test.columns:
             return {"error": "Colonne 'SK_ID_CURR' absente dans les données."}
 
-        client_data = df_train[df_train["SK_ID_CURR"] == client_id]
+        client_data = df_test[df_test["SK_ID_CURR"] == client_id]
 
         if client_data.empty:
             return {"error": f"Client {client_id} introuvable dans les données."}
