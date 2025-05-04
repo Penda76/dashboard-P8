@@ -83,3 +83,31 @@ def health_check():
         "model_loaded": isinstance(model, object),
         "seuil_metier": seuil_metier
     }
+# === ENDPOINT GET /predict/{client_id} ===
+@app.get("/predict/{client_id}")
+def predict_by_id(client_id: int):
+    try:
+        if "SK_ID_CURR" not in df_train.columns:
+            return {"error": "Colonne 'SK_ID_CURR' absente dans les données."}
+
+        client_data = df_train[df_train["SK_ID_CURR"] == client_id]
+
+        if client_data.empty:
+            return {"error": f"Client {client_id} introuvable dans les données."}
+
+        # On enlève l’identifiant du client pour la prédiction
+        input_data = client_data.drop(columns=["SK_ID_CURR"])
+        proba = model.predict_proba(input_data)[0][1]
+        prediction = int(proba >= seuil_metier)
+        decision = "Refusé" if prediction == 1 else "Accepté"
+
+        return {
+            "client_id": client_id,
+            "probability": round(float(proba), 4),
+            "prediction": prediction,
+            "decision": decision,
+            "seuil_metier": seuil_metier
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
