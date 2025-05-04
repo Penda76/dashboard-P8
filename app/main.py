@@ -29,7 +29,7 @@ with open(seuil_path, "r") as f:
     seuil_metier = float(f.read())
 
 df_train = pd.read_csv(x_train_path)
-columns = [col for col in df_train.columns if col != "SK_ID_CURR"]
+columns = df_train.columns.tolist()
 sample = df_train.iloc[0].to_dict()  # Exemple Swagger
 
 # === SCHÉMA D’ENTRÉE ===
