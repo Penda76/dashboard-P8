@@ -1,24 +1,3 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-import joblib
-import os
-import pandas as pd
-
-from fastapi import FastAPI
-from pydantic import BaseModel
-import joblib
-import pandas as pd
-import os
-
-# === RÉPERTOIRE DE TRAVAIL ===
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))  # remonte à la racine du dépôt
-
-# === CHEMINS DES FICHIERS ===
-model_path = os.path.join(ROOT_DIR, "model", "XGBoost_auc_0.740_cout_34090_trial_1.joblib")
-seuil_path = os.path.join(ROOT_DIR, "data_sample", "seuil_optimal.txt")
-x_train_path = os.path.join(ROOT_DIR, "data_sample", "X_test_clean.csv")
-
 # === LANCEMENT DE L’API ===
 app = FastAPI(title="Credit Scoring API")
 
@@ -46,6 +25,9 @@ class ClientData(BaseModel):
 def predict(data: ClientData):
     try:
         df = pd.DataFrame([data.dict()])
+        if "SK_ID_CURR" in df.columns:
+            df = df.drop(columns=["SK_ID_CURR"])  # On ne passe pas l'ID au modèle
+
         proba = model.predict_proba(df)[0][1]
         prediction = int(proba >= seuil_metier)
         decision = "Refusé" if prediction == 1 else "Accepté"
@@ -64,6 +46,9 @@ def predict(data: ClientData):
 @app.get("/predict_demo")
 def predict_demo():
     df = pd.DataFrame([sample])
+    if "SK_ID_CURR" in df.columns:
+        df = df.drop(columns=["SK_ID_CURR"])
+
     proba = model.predict_proba(df)[0][1]
     prediction = int(proba >= seuil_metier)
     decision = "Refusé" if prediction == 1 else "Accepté"
@@ -83,6 +68,7 @@ def health_check():
         "model_loaded": isinstance(model, object),
         "seuil_metier": seuil_metier
     }
+
 # === ENDPOINT GET /predict/{client_id} ===
 @app.get("/predict/{client_id}")
 def predict_by_id(client_id: int):
@@ -95,7 +81,6 @@ def predict_by_id(client_id: int):
         if client_data.empty:
             return {"error": f"Client {client_id} introuvable dans les données."}
 
-        # On enlève l’identifiant du client pour la prédiction
         input_data = client_data.drop(columns=["SK_ID_CURR"])
         proba = model.predict_proba(input_data)[0][1]
         prediction = int(proba >= seuil_metier)
