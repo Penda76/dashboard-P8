@@ -5,9 +5,18 @@ import pandas as pd
 import os
 
 # === CHEMINS DES FICHIERS ===
-model_path = os.path.join("app","model", "XGBoost_auc_0.741_cout_33940_trial_1.joblib")
-seuil_path = os.path.join("app","data_sample", "seuil_optimal.txt")
-x_test_path = os.path.join("app","data_sample", "X_test_clean.csv")
+# model_path = os.path.join("app","model", "XGBoost_auc_0.741_cout_33940_trial_1.joblib")
+# seuil_path = os.path.join("app","data_sample", "seuil_optimal.txt")
+# x_test_path = os.path.join("app","data_sample", "X_test_clean.csv")
+
+
+# === BASE DIR ===
+BASE_DIR = os.path.dirname(__file__)
+
+# === CHEMINS DES FICHIERS ===
+model_path = os.path.join(BASE_DIR, "model", "XGBoost_auc_0.741_cout_33940_trial_1.joblib")
+seuil_path = os.path.join(BASE_DIR, "data_sample", "seuil_optimal.txt")
+x_test_path = os.path.join(BASE_DIR, "data_sample", "X_test_clean.csv")
 
 # === LANCEMENT DE L’API ===
 app = FastAPI(title="Credit Scoring API")
