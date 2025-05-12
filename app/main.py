@@ -5,9 +5,9 @@ import pandas as pd
 import os
 
 # === CHEMINS DES FICHIERS ===
-model_path = os.path.join("model", "XGBoost_auc_0.741_cout_33940_trial_1.joblib")
-seuil_path = os.path.join("data_sample", "seuil_optimal.txt")
-x_test_path = os.path.join("data_sample", "X_test_clean.csv")
+model_path = os.path.join("app","model", "XGBoost_auc_0.741_cout_33940_trial_1.joblib")
+seuil_path = os.path.join("app","data_sample", "seuil_optimal.txt")
+x_test_path = os.path.join("app","data_sample", "X_test_clean.csv")
 
 # === LANCEMENT DE L’API ===
 app = FastAPI(title="Credit Scoring API")
@@ -26,18 +26,19 @@ sample = df_test.iloc[0].to_dict()  # Exemple Swagger
 class ClientData(BaseModel):
     __annotations__ = {col: float for col in columns}
 
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": sample
         }
+    }
 
 # === ENDPOINT POST /predict ===
 @app.post("/predict")
 def predict(data: ClientData):
     try:
-        df = pd.DataFrame([data.dict()])
+        df = pd.DataFrame([data.model_dump()])
         if "SK_ID_CURR" in df.columns:
-            df = df.drop(columns=["SK_ID_CURR"])  # On ne passe pas l'ID au modèle
+            df = df.drop(columns=["SK_ID_CURR"])  # L’ID n’est pas utilisé par le modèle
 
         proba = model.predict_proba(df)[0][1]
         prediction = int(proba >= seuil_metier)

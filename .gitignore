@@ -9,7 +9,7 @@ __pycache__/
 *.so
 
 # 🔒 Ne pas versionner les fichiers lourds ou sensibles
-*.csv
+#*.csv
 *.xlsx
 *.pkl
 *.sav
